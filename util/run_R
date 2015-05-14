@@ -1,0 +1,2 @@
+Rscript=/net/isi-software/apps/apps/R-3.1.1/bin/Rscript
+$Rscript reproduce-monocle.R

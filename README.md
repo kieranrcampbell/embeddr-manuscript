@@ -1,2 +1,1 @@
-# embeddr-manuscript
-Scripts &amp; figures for embeddr manuscript
+Scripts & figures for manuscript
