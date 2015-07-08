@@ -9,6 +9,8 @@
 
 library(monocle)
 library(MASS)
+library(cowplot)
+library(ggplot2)
 
 set.seed(12)
 
@@ -20,7 +22,7 @@ use_genes <- which((n_cells_exprs > 0.2 * ncol(HSMM_expr_matrix)) & rowMeans(HSM
 X <- HSMM_expr_matrix[use_genes,]
 x_nonzero <- rowSums(X > 0)
 
-X100 <- X[sample(1:nrow(X), 400),]
+X100 <- X[sample(1:nrow(X), 100),]
 X100 <- round(X100)
 estimates <- apply(X100, 1, function(x) {
   fd <- fitdistr(x, densfun = 'negative binomial', start = list(mu = mean(x), size=1))
@@ -28,14 +30,20 @@ estimates <- apply(X100, 1, function(x) {
   })
 
 means <- estimates[1,]
-dispersions <- estimates[2,]
-
 m_fit <- fitdistr(means, densfun = 'gamma')
+m_fit <- fitdistr(means, densfun = 'lognormal')
 print(m_fit)
+meanplt <- ggplot(data.frame(x = means)) + geom_density(aes(x=x)) + 
+  stat_function(fun = dlnorm, 
+                args = list(meanlog = m_fit$estimate[1], sdlog = m_fit$estimate[2]), color='red') 
 
+dispersions <- estimates[2,]
 d_fit <- fitdistr(dispersions, densfun = 'gamma')
-print(d_fit)
+displot <- ggplot(data.frame(x = dispersions)) + geom_density(aes(x=x)) + 
+  stat_function(fun = dgamma, 
+                args = list(shape = d_fit$estimate[1], rate = d_fit$estimate[2]), color='red')
 
+plot_grid(meanplt, displot, labels = c('Mean','Dispersion'))
 
 
 # now infer dropout rate --------------------------------------------------
