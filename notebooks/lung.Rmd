@@ -28,6 +28,7 @@ library(gplots)
 library(NMF)
 library(monocle)
 library(embeddr)
+library(knitr)
 
 set.seed(123)
 ```
@@ -90,6 +91,11 @@ It is obvious we have two very separate trajectories; let's consider the pseudot
 set.seed(123)
 lsce <- cluster_embedding(lsce, method='mm')#, k = 4)
 plot_embedding(lsce)
+
+
+## figure plot here
+lsce <- fit_pseudotime(lsce, clusters = 1:3)
+plot_embedding(lsce, color_by = "putative_cell_type") + scale_fill_discrete(name = "Cell Type")
 
 cl1 <- pData(lsce)$cluster %in% 1:3
 lsce_13 <- lsce[,cl1]
@@ -385,6 +391,9 @@ previously_identified <- c(rep('Both', length(agree_1)),
                            rep('Both', length(agree_2)),
                            rep('Prev', length(paper_only_2)),
                            rep('New', length(embeddr_only_2)))
+print(c("New AT1", length(embeddr_only_1)))
+print(c("New AT2", length(embeddr_only_2)))
+
 # prev_colors <- plyr::mapvalues(previously_identified, from=c('Prev','New'), to=c('darkgrey','lightgrey'))
 
 cell_type <- pData(lsce_13)$putative_cell_type[order(pseudotime(lsce_13))]
@@ -408,51 +417,26 @@ aheatmap(mm, Rowv = NA, Colv = NA,
          annCol = data.frame('Cell Type' = cell_type))
 ```
 
+```{r new-genes}
+## AT1----
+## Both
+print(paste0(at1_both, collapse=' '))
+## Original
+print(paste0(at1_original, collapse = ' '))
+## Embeddr
+ print(paste0(at1_embeddr, collapse = ' '))
+ 
+ ## AT2----
+## Both
+print(paste0(at2_both, collapse=' '))
+## Original
+print(paste0(at2_prev, collapse = ' '))
+## Embeddr
+ print(paste0(at2_embeddr, collapse = ' '))
+```
 
 ## Compare to monocle
 
 ```{r pull-out-sce}
 save(lsce_bp_at1, pseudotime_markers_at2, file="~/delete_me.Rdata")
 ```
-
-```{r compare-monocle, cache=TRUE}
-# lcds <- toCellDataSet(lsce)
-# lcds <- setOrderingFilter(lcds, het_genes)
-# lcds2 <- lcds # logs data for you
-# exprs(lcds2) <- 2^exprs(lcds) - 1
-# 
-# lcds2 <- reduceDimension(lcds2, use_irlba = FALSE)
-# lcds2 <- orderCells(lcds2, num_paths = 2)
-# plot_spanning_tree(lcds2, color_by = 'putative_cell_type')
-# 
-# ## BP - AT1 transition
-# cds_at_bp1 <- lcds2[,lcds$putative_cell_type %in% c('BP','AT1')]
-# #cds_at_bp1 <- reduceDimension(cds_at_bp1, use_irlba=FALSE)
-# cds_at_bp1 <- orderCells(cds_at_bp1, num_paths = 1)
-# plot_spanning_tree(cds_at_bp1, color_by = 'putative_cell_type')
-# 
-# ## BP - AT2 transition
-# cds_at_bp2 <- lcds2[,lcds$putative_cell_type %in% c('BP','AT2')]
-# #cds_at_bp1 <- reduceDimension(cds_at_bp1, use_irlba=FALSE)
-# cds_at_bp2 <- orderCells(cds_at_bp2, num_paths = 1)
-# plot_spanning_tree(cds_at_bp2, color_by = 'putative_cell_type')
-# 
-# n_cells_expressed <- rowSums(exprs(cds_at_bp1) > 0)
-# keep_gene <- n_cells_expressed > 0.2 * dim(cds_at_bp1)[2]
-# cds <- cds_at_bp1[keep_gene,]
-# 
-# exprs(cds) <- exprs(cds) + 1
-# cds@lowerDetectionLimit <- log10(1)
-# # exprs(cds) <- exprs(cds) + 1
-# diff_test_res <- differentialGeneTest(cds)
-# 
-# n_cells_expressed <- rowSums(exprs(cds_at_bp2) > 0)
-# keep_gene <- n_cells_expressed > 0.2 * dim(cds_at_bp2)[2]
-# cds <- cds_at_bp2[keep_gene,]
-# exprs(cds) <- exprs(cds) + 1
-# diff_test_res <- differentialGeneTest(cds)
-
-```
-
-
-
